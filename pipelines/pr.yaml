@@ -40,6 +40,17 @@ stages:
     pool:
       vmImage: ubuntu-latest
     steps:
+      # Use kubelogin to log into the cluster with SP
+      - task: AzureCLI@2
+        displayName: aks non-admin login using kubelogin
+        inputs:
+          azureSubscription: $(service_name)
+          scriptType: bash
+          scriptLocation: inlineScript
+          inlineScript: |
+            az aks get-credentials -n $(kubernetesCluster) -g $(azureResourceGroup)
+            kubelogin convert-kubeconfig -l msi
+
       # Deploy to AKS cluster in development namespace
       # First clean up any existing deployments
       - task: Kubernetes@1
