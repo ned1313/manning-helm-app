@@ -41,6 +41,15 @@ stages:
       vmImage: ubuntu-latest
     steps:
       # Use kubelogin to log into the cluster with SP
+      - bash: |
+
+          # Download and install
+          curl -LO "https://github.com/Azure/kubelogin/releases/download/$(kubeloginVersion)/kubelogin-linux-amd64.zip"
+          sudo unzip -j "kubelogin-linux-amd64.zip" -d /usr/local/bin
+          rm -f "kubelogin-linux-amd64.zip"
+          kubelogin --version
+        displayName: kubelogin - install
+
       - task: AzureCLI@2
         displayName: aks non-admin login using kubelogin
         inputs:
