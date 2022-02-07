@@ -12,7 +12,7 @@ pr:
     - main
   paths:
     include:
-    - code/aks_config
+    - helmtest/
 
 stages:
 # Stage that includes the build reason PullRequest
