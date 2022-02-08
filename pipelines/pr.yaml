@@ -67,7 +67,7 @@ stages:
           # Get credentials using AAD non-interactive login
           az aks get-credentials \
             --resource-group $(azureResourceGroup) \
-            --name $(aksClusterName) \
+            --name $(kubernetesCluster) \
             --overwrite-existing \
             --file .kubeconfig-$(kubernetesCluster)
 
