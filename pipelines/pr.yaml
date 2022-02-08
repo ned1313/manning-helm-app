@@ -31,7 +31,7 @@ stages:
     - bash: |
         helm registry login $(acr_id).azurecr.io \
           --username $(aad_sp_client_id) \
-          --password $($(aad_sp_client_secret)
+          --password $(aad_sp_client_secret)
 
         helm chart save '$(System.DefaultWorkingDirectory)/helmtest/hello-world' $(acr_id).azurecr.io/charts/hello-world:$(Build.BuildNumber)
         helm chart push $(acr_id).azurecr.io/charts/hello-world:$(Build.BuildNumber)
