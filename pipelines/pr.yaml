@@ -52,15 +52,28 @@ stages:
           kubelogin --version
         displayName: kubelogin - install
 
-      - task: AzureCLI@2
-        displayName: aks non-admin login using kubelogin
-        inputs:
-          azureSubscription: $(service_name)
-          scriptType: bash
-          scriptLocation: inlineScript
-          inlineScript: |
-            az aks get-credentials -n $(kubernetesCluster) -g $(azureResourceGroup) --file .kubeconfig-$(kubernetesCluster)
-            kubelogin convert-kubeconfig -l azurecli
+      - bash: |
+          # Log in using stored SP
+          az login \
+            --service-principal \
+            --username $(aad_sp_client_id) \
+            --password $(aad_sp_client_secret) \
+            --tenant $(aad_tenant_id)
+
+          # Create the kubeconfig file with name of AKS cluster
+          touch .kubeconfig-$(kubernetesCluster)
+          chmod 600 .kubeconfig-$(kubernetesCluster)
+
+          # Get credentials using AAD non-interactive login
+          az aks get-credentials \
+            --resource-group $(azureResourceGroup) \
+            --name $(aksClusterName) \
+            --overwrite-existing \
+            --file .kubeconfig-$(kubernetesCluster)
+
+          # Convert the credentials using the azure cli option
+          kubelogin convert-kubeconfig -l azurecli
+        displayName: create kubelogin file with azurecli
         env:
           KUBECONFIG: $(Build.SourcesDirectory)/.kubeconfig-$(kubernetesCluster)
 
