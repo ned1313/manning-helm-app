@@ -31,13 +31,13 @@ stages:
     - bash: |
         helm version
 
-        helm registry login $(acr_id).azurecr.io \
+        helm registry login $(acr_login_server) \
           --username $(aad_sp_client_id) \
           --password $(aad_sp_client_secret)
 
         helm package '$(System.DefaultWorkingDirectory)/helmtest/hello-world' --version $(Build.BuildNumber)
 
-        helm push '$(System.DefaultWorkingDirectory)/hello-world-$(Build.BuildNumber).tgz' oci://$(acr_id).azurecr.io/charts/hello-world:$(Build.BuildNumber)
+        helm push '$(System.DefaultWorkingDirectory)/hello-world-$(Build.BuildNumber).tgz' oci://$(acr_login_server)/charts/hello-world:$(Build.BuildNumber)
       displayName: 'helm - save and push'
       env:
         HELM_EXPERIMENTAL_OCI: 1
