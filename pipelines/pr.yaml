@@ -37,7 +37,7 @@ stages:
 
         helm package '$(System.DefaultWorkingDirectory)/helmtest/hello-world' --version $(Build.BuildNumber)
 
-        helm push '$(System.DefaultWorkingDirectory)/*.tgz' oci://$(acr_id).azurecr.io/charts/hello-world:$(Build.BuildNumber)
+        helm push '$(System.DefaultWorkingDirectory)/hello-world-$(Build.BuildNumber).tgz' oci://$(acr_id).azurecr.io/charts/hello-world:$(Build.BuildNumber)
       displayName: 'helm - save and push'
       env:
         HELM_EXPERIMENTAL_OCI: 1
