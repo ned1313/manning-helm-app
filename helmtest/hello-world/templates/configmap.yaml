@@ -3,4 +3,4 @@ kind: ConfigMap
 metadata:
   name: hello-world-configmap
 data:
-  myvalue: "Hello World!18"
+  myvalue: "Hello World!19"
