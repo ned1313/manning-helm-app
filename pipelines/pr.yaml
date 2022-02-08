@@ -28,15 +28,16 @@ stages:
       vmImage: ubuntu-latest
     steps:
     # Helm deploy to save chart
-    - task: HelmDeploy@0
-      displayName: 'Helm save'
-      inputs:
-        command: save
-        chartNameForACR: $(acr_id).azurecr.io/charts/hello-world:$(Build.BuildNumber)
-        chartPathForACR: '$(System.DefaultWorkingDirectory)/helmtest/hello-world'
-        azureSubscriptionEndpointForACR: $(service_name)
-        azureResourceGroupForACR: $(acr_id)
-        azureContainerRegistry: $(acr_id)
+    - bash: |
+        helm registry login $(acr_id).azurecr.io \
+          --username $(aad_sp_client_id) \
+          --password $($(aad_sp_client_secret)
+
+        helm chart save '$(System.DefaultWorkingDirectory)/helmtest/hello-world' $(acr_id).azurecr.io/charts/hello-world:$(Build.BuildNumber)
+        helm chart push $(acr_id).azurecr.io/charts/hello-world:$(Build.BuildNumber)
+      displayName: 'helm - save and push'
+      env:
+        HELM_EXPERIMENTAL_OCI: 1
 
   - job: deploy_helm_chart
     pool:
