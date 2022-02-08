@@ -3,7 +3,8 @@
 # Reference variable group
 variables:
 - group: ado-variables
-  kubeloginVersion: 'v0.0.10'
+- name: kubeloginVersion
+  value: 'v0.0.10'
 
 # Trigger on a PR action from GitHub on the main branch (merging to main)
 # Inlcudes only the AKS config code
