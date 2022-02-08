@@ -3,6 +3,8 @@
 # Reference variable group
 variables:
 - group: ado-variables
+- name: kubeloginVersion
+  value: 'v0.0.10'
 
 # Trigger on a PR action from GitHub on the main branch (merging to main)
 # Inlcudes only the AKS config code
@@ -12,67 +14,64 @@ pr:
     - main
   paths:
     include:
-    - code/aks_config
+    - helmtest/
 
 stages:
 # Stage that includes the build reason PullRequest
 - stage: PullRequest
   condition: eq(variables['Build.Reason'], 'PullRequest')
-  displayName: Helm Package and Deploy
+  displayName: Helm Deploy to development
   jobs:
-  # Job to save Helm chart to ACR
-  - job: save_helm_chart
-    pool:
-      vmImage: ubuntu-latest
-    steps:
-    # Helm deploy to save chart
-    - task: HelmDeploy@0
-      displayName: 'Helm save'
-      inputs:
-        command: save
-        chartNameForACR: $(acr_id).azurecr.io/charts/hello-world:$(Build.BuildNumber)
-        chartPathForACR: '$(System.DefaultWorkingDirectory)/helmtest/hello-world'
-        azureSubscriptionEndpointForACR: $(service_name)
-        azureResourceGroupForACR: $(acr_id)
-        azureContainerRegistry: $(acr_id)
-
   - job: deploy_helm_chart
     pool:
       vmImage: ubuntu-latest
     steps:
+      # Use kubelogin to log into the cluster with SP
+      - bash: |
+
+          # Download and install
+          curl -LO "https://github.com/Azure/kubelogin/releases/download/$(kubeloginVersion)/kubelogin-linux-amd64.zip"
+          sudo unzip -j "kubelogin-linux-amd64.zip" -d /usr/local/bin
+          rm -f "kubelogin-linux-amd64.zip"
+          kubelogin --version
+        displayName: kubelogin - install
+
+      - bash: |
+          # Log in using stored SP
+          az login \
+            --service-principal \
+            --username $(aad_sp_client_id) \
+            --password $(aad_sp_client_secret) \
+            --tenant $(aad_tenant_id)
+
+          # Create the kubeconfig file with name of AKS cluster
+          touch .kubeconfig-$(kubernetesCluster)
+          chmod 600 .kubeconfig-$(kubernetesCluster)
+
+          # Get credentials using AAD non-interactive login
+          az aks get-credentials \
+            --resource-group $(azureResourceGroup) \
+            --name $(kubernetesCluster) \
+            --overwrite-existing \
+            --file .kubeconfig-$(kubernetesCluster)
+
+          # Convert the credentials using the azure cli option
+          kubelogin convert-kubeconfig -l azurecli
+        displayName: create kubelogin file with azurecli
+        env:
+          KUBECONFIG: $(Build.SourcesDirectory)/.kubeconfig-$(kubernetesCluster)
+
       # Deploy to AKS cluster in development namespace
       # First clean up any existing deployments
-      - task: Kubernetes@1
-        displayName: kubectl delete namespace
-        inputs:
-          connectionType: Azure Resource Manager
-          azureSubscriptionEndpoint: $(service_name)
-          azureResourceGroup: $(azureResourceGroup)
-          kubernetesCluster: $(kubernetesCluster)
-          useClusterAdmin: false
-          command: delete
-          arguments: namespace development --ignore-not-found=true
+      - bash: |
+          kubectl delete namespace development --ignore-not-found
+          kubectl create namespace development
+        displayName: kubectl - delete and create namespace
+        env:
+          KUBECONFIG: $(Build.SourcesDirectory)/.kubeconfig-$(kubernetesCluster)
 
-      # Next create namespace and deploy Helm chart
-      - task: Kubernetes@1
-        displayName: kubectl create namespace
-        inputs:
-          connectionType: Azure Resource Manager
-          azureSubscriptionEndpoint: $(service_name)
-          azureResourceGroup: $(azureResourceGroup)
-          kubernetesCluster: $(kubernetesCluster)
-          useClusterAdmin: false
-          command: create
-          arguments: namespace development
-
-      - task: HelmDeploy@0
-        displayName: Helm deploy
-        inputs:
-          connectionType: Azure Resource Manager
-          azureSubscriptionEndpoint: $(service_name)
-          azureResourceGroup: $(azureResourceGroup)
-          kubernetesCluster: $(kubernetesCluster)
-          namespace: development
-          command: install
-          chartType: FilePath
-          chartPath: '$(System.DefaultWorkingDirectory)/helmtest/hello-world'
+      - bash: |
+          helm install --namespace development hello-world '$(System.DefaultWorkingDirectory)/helmtest/hello-world'
+        displayName: Helm install
+        env:
+          KUBECONFIG: $(Build.SourcesDirectory)/.kubeconfig-$(kubernetesCluster)
