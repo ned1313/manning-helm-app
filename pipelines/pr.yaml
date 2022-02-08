@@ -59,31 +59,22 @@ stages:
           scriptType: bash
           scriptLocation: inlineScript
           inlineScript: |
-            az aks get-credentials -n $(kubernetesCluster) -g $(azureResourceGroup)
-            kubelogin convert-kubeconfig -l msi
+            az aks get-credentials -n $(kubernetesCluster) -g $(azureResourceGroup) --file .kubeconfig-$(kubernetesCluster)
+            kubelogin convert-kubeconfig -l azurecli
+        env:
+          KUBECONFIG: $(Build.SourcesDirectory)/.kubeconfig-$(kubernetesCluster)
 
       # Deploy to AKS cluster in development namespace
       # First clean up any existing deployments
-      - task: Kubernetes@1
+      - bash: |
+          kubectl delete namespace development --ignore-not-found
+          kubectl create namespsace development
         displayName: kubectl delete namespace
-        inputs:
-          connectionType: None
-          command: delete
-          arguments: namespace development --ignore-not-found=true
+        env:
+          KUBECONFIG: $(Build.SourcesDirectory)/.kubeconfig-$(kubernetesCluster)
 
-      # Next create namespace and deploy Helm chart
-      - task: Kubernetes@1
-        displayName: kubectl create namespace
-        inputs:
-          connectionType: None
-          command: create
-          arguments: namespace development
-
-      - task: HelmDeploy@0
-        displayName: Helm deploy
-        inputs:
-          connectionType: None
-          namespace: development
-          command: install
-          chartType: FilePath
-          chartPath: '$(System.DefaultWorkingDirectory)/helmtest/hello-world'
+      - bash: |
+          helm install --namespace development hello-world '$(System.DefaultWorkingDirectory)/helmtest/hello-world'
+        displayName: Helm install
+        env:
+          KUBECONFIG: $(Build.SourcesDirectory)/.kubeconfig-$(kubernetesCluster)
