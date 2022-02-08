@@ -81,8 +81,8 @@ stages:
       # First clean up any existing deployments
       - bash: |
           kubectl delete namespace development --ignore-not-found
-          kubectl create namespsace development
-        displayName: kubectl delete namespace
+          kubectl create namespace development
+        displayName: kubectl - delete and create namespace
         env:
           KUBECONFIG: $(Build.SourcesDirectory)/.kubeconfig-$(kubernetesCluster)
 
