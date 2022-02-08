@@ -67,11 +67,7 @@ stages:
       - task: Kubernetes@1
         displayName: kubectl delete namespace
         inputs:
-          connectionType: Azure Resource Manager
-          azureSubscriptionEndpoint: $(service_name)
-          azureResourceGroup: $(azureResourceGroup)
-          kubernetesCluster: $(kubernetesCluster)
-          useClusterAdmin: false
+          connectionType: None
           command: delete
           arguments: namespace development --ignore-not-found=true
 
@@ -79,21 +75,14 @@ stages:
       - task: Kubernetes@1
         displayName: kubectl create namespace
         inputs:
-          connectionType: Azure Resource Manager
-          azureSubscriptionEndpoint: $(service_name)
-          azureResourceGroup: $(azureResourceGroup)
-          kubernetesCluster: $(kubernetesCluster)
-          useClusterAdmin: false
+          connectionType: None
           command: create
           arguments: namespace development
 
       - task: HelmDeploy@0
         displayName: Helm deploy
         inputs:
-          connectionType: Azure Resource Manager
-          azureSubscriptionEndpoint: $(service_name)
-          azureResourceGroup: $(azureResourceGroup)
-          kubernetesCluster: $(kubernetesCluster)
+          connectionType: None
           namespace: development
           command: install
           chartType: FilePath
