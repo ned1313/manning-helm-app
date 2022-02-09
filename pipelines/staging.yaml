@@ -6,6 +6,9 @@ variables:
 - name: kubeloginVersion
   value: 'v0.0.10'
 
+# No CI trigger
+trigger: none
+
 resources:
   containers:
   - container: hello-world
