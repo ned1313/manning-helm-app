@@ -6,6 +6,9 @@ variables:
 - name: kubeloginVersion
   value: 'v0.0.10'
 
+# No CI trigger
+trigger: none
+
 # Trigger on a PR action from GitHub on the main branch (merging to main)
 # Inlcudes only the AKS config code
 pr:
