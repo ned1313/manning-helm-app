@@ -10,18 +10,19 @@ variables:
 trigger: none
 
 resources:
-  containers:
-  - container: hello-world
-    type: ACR
-    azureSubscription: $(service_name)
+  pipelines:
+  - pipeline: mergetomain
+    source: 'Main Merge'
     resourceGroup: $(azureResourceGroup)
     registry: $(acr_name)
     repository: charts/hello-world/hello-world
     trigger:
-      enabled: true
+      branches:
+        include:
+        - main
 
 stages:
-# Stage that includes the build reason PullRequest
+# Staging stage to deploy new helm chart
 - stage: Staging
   displayName: Helm Deploy to staging
   jobs:
@@ -29,6 +30,16 @@ stages:
     pool:
       vmImage: ubuntu-latest
     steps:
+      - script: |
+          echo $(resources.pipeline.mergetomain.pipelineID)
+          echo $(resources.pipeline.mergetomain.runName)
+          echo $(resources.pipeline.mergetomain.runID)
+          echo $(resources.pipeline.mergetomain.runURI)
+          echo $(resources.pipeline.mergetomain.sourceBranch)
+          echo $(resources.pipeline.mergetomain.sourceCommit)
+          echo $(resources.pipeline.mergetomain.sourceProvider)
+          echo $(resources.pipeline.mergetomain.requestedFor)
+          echo $(resources.pipeline.mergetomain.requestedForID)
       # Use kubelogin to log into the cluster with SP
       - bash: |
 
@@ -79,7 +90,7 @@ stages:
           --username $(aad_sp_client_id) \
           --password $(aad_sp_client_secret)
 
-          helm upgrade --install --namespace staging hello-world oci://$(acr_login_server)/$(resources.container.hello-world.repository):$(resources.container.hello-world.tag)
+          helm upgrade --install --namespace staging hello-world oci://$(acr_login_server)/charts/hello-world/hello-world:$(resources.pipeline.mergetomain.runID)
         displayName: Helm upgrade
         env:
           KUBECONFIG: $(Build.SourcesDirectory)/.kubeconfig-$(kubernetesCluster)
