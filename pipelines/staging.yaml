@@ -13,9 +13,6 @@ resources:
   pipelines:
   - pipeline: mergetomain
     source: 'Main Merge'
-    resourceGroup: $(azureResourceGroup)
-    registry: $(acr_name)
-    repository: charts/hello-world/hello-world
     trigger:
       branches:
         include:
