@@ -17,6 +17,8 @@ resources:
       branches:
         include:
         - main
+      stages:
+      - Push
 
 stages:
 # Staging stage to deploy new helm chart
