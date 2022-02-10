@@ -16,7 +16,7 @@ resources:
     azureSubscription: $(service_name)
     resourceGroup: $(azureResourceGroup)
     registry: $(acr_name)
-    repository: charts/hello-world
+    repository: charts/hello-world/hello-world
     trigger:
       enabled: true
 
