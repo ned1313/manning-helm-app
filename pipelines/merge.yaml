@@ -4,6 +4,9 @@
 variables:
 - group: ado-variables
 
+# Do not trigger on pr
+pr: none
+
 # Trigger on push for main branch in directory with Helm code files
 trigger:
   branches:

@@ -8,6 +8,7 @@ variables:
 
 # No CI trigger
 trigger: none
+pr: none
 
 resources:
   pipelines:
