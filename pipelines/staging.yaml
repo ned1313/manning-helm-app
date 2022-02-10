@@ -90,7 +90,7 @@ stages:
           --username $(aad_sp_client_id) \
           --password $(aad_sp_client_secret)
 
-          helm upgrade --install --namespace staging hello-world oci://$(acr_login_server)/charts/hello-world/hello-world:$(resources.pipeline.mergetomain.runName)
+          helm upgrade --install --namespace staging hello-world oci://$(acr_login_server)/charts/hello-world/hello-world --version $(resources.pipeline.mergetomain.runName)
         displayName: Helm upgrade
         env:
           KUBECONFIG: $(Build.SourcesDirectory)/.kubeconfig-$(kubernetesCluster)
